@@ -13,7 +13,7 @@
  * @copyright 2018 <himself@jeanbruenn.info>
  * @license https://opensource.org/licenses/MIT The MIT License
  * @see https://github.com/chani/agcwd
- * @todo convert back to original colorspace ^^
+ * @see https://jeanbruenn.info/2018/11/05/adaptive-gamma-correction-with-weighting-distribution-with-imagick-and-php/
  */
 class ImageAGCWD
 {
@@ -150,6 +150,8 @@ class ImageAGCWD
         $n->mergeimagelayers(\Imagick::LAYERMETHOD_FLATTEN);
         $n = $n->combineImages(\imagick::CHANNEL_ALL);
         $n->setimagecolorspace(\imagick::COLORSPACE_HSB);
+
+        $n->transformimagecolorspace(\Imagick::COLORSPACE_SRGB);
 
         return $n;
     }
