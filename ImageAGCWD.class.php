@@ -13,6 +13,7 @@
  * @copyright 2018 <himself@jeanbruenn.info>
  * @license https://opensource.org/licenses/MIT The MIT License
  * @see https://github.com/chani/agcwd
+ * @todo convert back to original colorspace ^^
  */
 class ImageAGCWD
 {
