@@ -17,7 +17,7 @@
  * @copyright 2018 <himself@jeanbruenn.info>
  * @license https://opensource.org/licenses/MIT The MIT License
  * @see https://github.com/chani/agcwd
- * @see https://jeanbruenn.info/2018/11/05/adaptive-gamma-correction-with-weighting-distribution-with-imagick-and-php/
+ * @see https://jeanbruenn.info/2018/11/06/adaptive-gamma-correction-for-brightness-distorted-images-with-imagick-and-php/
  */
 class ImageIAGCWD
 {
