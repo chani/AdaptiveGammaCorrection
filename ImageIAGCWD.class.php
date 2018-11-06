@@ -1,6 +1,6 @@
 <?php
 /**
- * Class ImageAGCWD
+ * Class ImageIAGCWD
  *
  * PHP implementation of an improved Adaptive Gamma Correction with Weighting Distribution for
  * brightness distorted images
