@@ -21,18 +21,85 @@
  */
 class ImageIAGCWD extends ImageAGC
 {
-
     /**
      * @var float
      */
-    private $alpha = 0.5;
+    private $adjustingParameter = 0.5;
+    /**
+     * @var float
+     */
+    private $brightAdjustingParameter = 0.25;
+    /**
+     * @var float
+     */
+    private $dimmedAdjustingParameter = 0.75;
+    /**
+     * @var bool
+     */
+    private $useAGCWD = true;
+
+    /**
+     * @return boolean
+     */
+    public function getUseAGCWD()
+    {
+        return $this->useAGCWD;
+    }
+
+    /**
+     * @param boolean $useAGCWD
+     */
+    public function setUseAGCWD($useAGCWD)
+    {
+        $this->useAGCWD = $useAGCWD;
+    }
+
+    /**
+     * @return float
+     */
+    public function getDimmedAdjustingParameter()
+    {
+        return $this->dimmedAdjustingParameter;
+    }
+
+    /**
+     * @param float $dimmedAdjustingParameter
+     */
+    public function setDimmedAdjustingParameter($dimmedAdjustingParameter)
+    {
+        $this->dimmedAdjustingParameter = $dimmedAdjustingParameter;
+    }
+
+    /**
+     * @return float
+     */
+    public function getBrightAdjustingParameter()
+    {
+        return $this->brightAdjustingParameter;
+    }
+
+    /**
+     * @param float $brightAdjustingParameter
+     */
+    public function setBrightAdjustingParameter($brightAdjustingParameter)
+    {
+        $this->brightAdjustingParameter = $brightAdjustingParameter;
+    }
 
     /**
      * @return float
      */
     public function getAdjustingParameter()
     {
-        return $this->alpha;
+        return $this->adjustingParameter;
+    }
+
+    /**
+     * @param float $adjustingParameter
+     */
+    public function setAdjustingParameter($adjustingParameter)
+    {
+        $this->adjustingParameter = $adjustingParameter;
     }
 
     /**
@@ -45,8 +112,9 @@ class ImageIAGCWD extends ImageAGC
         $cdf_wl = [];
 
         $mn = $this->b->getimagewidth() * $this->b->getimageheight();
-        $imageIterator = $this->b->getPixelIterator();
+
         $m_l = 0;
+        $imageIterator = $this->b->getPixelIterator();
         foreach ($imageIterator as $pixels) {
             /** @var $pixel \ImagickPixel * */
             foreach ($pixels as $pixel) {
@@ -55,11 +123,11 @@ class ImageIAGCWD extends ImageAGC
             }
             $imageIterator->syncIterator();
         }
+
         $t1 = 112;
         $rt = 0.3;
         $t = ($m_l - $t1) / $t1;
 
-        /** @todo most likely I can write this nicer... * */
         if ($t < ($rt * (-1))) {
             $dimmed = true;
             $bright = false;
@@ -67,21 +135,20 @@ class ImageIAGCWD extends ImageAGC
             $dimmed = false;
             $bright = true;
         } else {
-            /**
-             * @todo currently, normal AGCWD is used for "normal" pictures, make it configurable if pictures should be modified at all here
-             */
+            // return original if we shouldn't use AGCWD, however, this will still do the colorspace conversation.
+            if ($this->useAGCWD === false)
+                return $this->combine();
             $dimmed = false;
             $bright = false;
         }
 
+        $alpha = $this->adjustingParameter;
         if ($bright == true) {
             $this->b->negateimage(false, \Imagick::CHANNEL_ALL);
             $this->t = clone $this->b;
-            /** @todo make this configurable */
-            $this->setAdjustingParameter(0.25);
+            $alpha = $this->brightAdjustingParameter;
         } elseif ($dimmed == true) {
-            /** @todo make this configurable */
-            $this->setAdjustingParameter(0.75);
+            $alpha = $this->dimmedAdjustingParameter;
         }
 
         $hist = $this->b->getImageHistogram();
@@ -96,16 +163,17 @@ class ImageIAGCWD extends ImageAGC
 
         $minPDF = min($pdf_l);
         $maxPDF = max($pdf_l);
+        $diffPDF = $maxPDF - $minPDF;
+
         $pdf_wl_sum = 0;
         foreach ($pdf_l as $intensity => $pdf) {
-            $pdf_wl[$intensity] = $maxPDF * pow((($pdf_l[$intensity] - $minPDF) / ($maxPDF - $minPDF)), $this->alpha);
+            $pdf_wl[$intensity] = $maxPDF * pow((($pdf_l[$intensity] - $minPDF) / $diffPDF), $alpha);
+            $cdf_wl[$intensity] = array_sum(array_filter($pdf_wl, function ($k) use ($intensity) {
+                return $k <= $intensity;
+            }, ARRAY_FILTER_USE_KEY));
             $pdf_wl_sum += $pdf_wl[$intensity];
         }
-        foreach ($pdf_wl as $intensity => $pdfw) {
-            $cdf_wl[$intensity] = array_sum(array_filter($pdf_wl, function ($k) use ($intensity) {
-                    return $k <= $intensity;
-                }, ARRAY_FILTER_USE_KEY)) / $pdf_wl_sum;
-        }
+
         $r = 0.5;
         $imageIterator = $this->t->getPixelIterator();
         foreach ($imageIterator as $pixels) {
@@ -116,10 +184,11 @@ class ImageIAGCWD extends ImageAGC
                 $c = $pixel->getcolor();
                 $l = $c['b'];
 
+                $cdf = 1 - ($cdf_wl[$l] / $pdf_wl_sum);
                 if ($dimmed == true) {
-                    $value = $lmax * pow(($l / $lmax), max($r, 1 - $cdf_wl[$l]));
+                    $value = $lmax * pow(($l / $lmax), max($r, $cdf));
                 } else {
-                    $value = $lmax * pow(($l / $lmax), (1 - $cdf_wl[$l]));
+                    $value = $lmax * pow(($l / $lmax), $cdf);
                 }
 
                 $pixel->setColorValue(\Imagick::COLOR_RED, $value / 255);
@@ -132,13 +201,5 @@ class ImageIAGCWD extends ImageAGC
             $this->t->negateimage(false, \Imagick::CHANNEL_ALL);
         }
         return $this->combine();
-    }
-
-    /**
-     * @param float $alpha
-     */
-    public function setAdjustingParameter($alpha = 0.5)
-    {
-        $this->alpha = $alpha;
     }
 }
