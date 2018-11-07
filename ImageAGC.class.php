@@ -24,25 +24,37 @@ abstract class ImageAGC
      * @var \Imagick
      */
     protected $t = null;
+    /**
+     * @var int|null
+     */
+    protected $colorspace = null;
 
     /**
      * @param \Imagick $im
      */
     public function __construct(\Imagick $im)
     {
-        $im->transformImageColorspace(\Imagick::COLORSPACE_HSB);
+        $colorspace = $im->getImageColorspace();
+        if ($colorspace == \Imagick::COLORSPACE_UNDEFINED) {
+            $colorspace = \Imagick::COLORSPACE_SRGB;
+        }
+        $this->colorspace = $colorspace;
 
-        $h = clone $im;
-        $s = clone $im;
-        $b = clone $im;
+        if ($colorspace != \Imagick::COLORSPACE_GRAY && $colorspace != \Imagick::COLORSPACE_HSB) {
+            $im->transformImageColorspace(\Imagick::COLORSPACE_HSB);
 
-        $h->separateImageChannel(\Imagick::CHANNEL_RED);
-        $s->separateImageChannel(\Imagick::CHANNEL_GREEN);
-        $b->separateImageChannel(\Imagick::CHANNEL_BLUE);
+            $h = clone $im;
+            $s = clone $im;
+            $h->separateImageChannel(\Imagick::CHANNEL_RED);
+            $s->separateImageChannel(\Imagick::CHANNEL_GREEN);
+            $this->h = $h;
+            $this->s = $s;
+        }
 
         $this->im = $im;
-        $this->h = $h;
-        $this->s = $s;
+
+        $b = clone $im;
+        $b->separateImageChannel(\Imagick::CHANNEL_BLUE);
         $this->b = $b;
         $this->t = clone $b;
     }
@@ -69,16 +81,20 @@ abstract class ImageAGC
      */
     protected function combine()
     {
-        $n = new Imagick();
-        $n->addImage($this->h);
-        $n->addImage($this->s);
-        $n->addImage($this->t);
-        $n->setimagecolorspace(\imagick::COLORSPACE_HSB);
-        $n->mergeimagelayers(\Imagick::LAYERMETHOD_FLATTEN);
-        $n = $n->combineImages(\imagick::CHANNEL_ALL);
-        $n->setimagecolorspace(\imagick::COLORSPACE_HSB);
+        if ($this->colorspace == \Imagick::COLORSPACE_GRAY) {
+            return $this->t;
+        } else {
+            $n = new Imagick();
+            $n->addImage($this->h);
+            $n->addImage($this->s);
+            $n->addImage($this->t);
+            $n->setimagecolorspace(\imagick::COLORSPACE_HSB);
+            $n->mergeimagelayers(\Imagick::LAYERMETHOD_FLATTEN);
+            $n = $n->combineImages(\imagick::CHANNEL_ALL);
+            $n->setimagecolorspace(\imagick::COLORSPACE_HSB);
+        }
 
-        $n->transformimagecolorspace(\Imagick::COLORSPACE_SRGB);
+        $n->transformimagecolorspace($this->colorspace);
 
         return $n;
     }
