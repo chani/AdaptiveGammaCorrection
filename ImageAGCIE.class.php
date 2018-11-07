@@ -38,13 +38,8 @@ class ImageAGCIE extends ImageAGC
         foreach ($imageIterator as $pixels) {
             /** @var $pixel \ImagickPixel * */
             foreach ($pixels as $pixel) {
-                $color = $pixel->getcolor();
-                /**
-                 * I'm not sure if 255 or 256. Also I'm not sure why 25[5|6] works even for 16bit
-                 * images. I believe this should be 65535 for 16bit images?
-                 * @todo fix me
-                 */
-                $l = $color['b'] / 255;
+                $color = $pixel->getcolor(true);
+                $l = $color['b'];
 
                 if ($class == 'lcb' || $class == 'lcd') {
                     $y = -log($standardDeviation, 2);
