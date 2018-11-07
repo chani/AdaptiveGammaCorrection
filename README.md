@@ -9,17 +9,16 @@ These are just some implementations of proposed methods in papers I've read whic
 ## Example usage
 
 ```
-// agcwd
-$t = new ImageAGCWD(new \Imagick('your-picture.png'));
-$t->writeimage('output.png');
+$testImage = new Imagick('test.png');
 
-// iagcwd
-$t = new ImageIAGCWD(new \Imagick('your-picture.png'));
-$t->writeimage('output.png');
+$agcie = new ImageAGCWD($testImage);
+$agcie->writeImage('agcie.png');
 
-// agc
-$t = new ImageAGC(new \Imagick('your-picture.png'));
-$t->writeimage('output.png');
+$agcwd = new ImageAGCWD($testImage);
+$agcwd->writeImage('agcwd.png');
+
+$iagcwd = new ImageIAGCWD($testImage);
+$iagcwd->writeImage('iagcwd.png');
 ```
 
 ## Results

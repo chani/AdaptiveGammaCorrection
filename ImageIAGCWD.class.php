@@ -19,40 +19,13 @@
  * @see https://github.com/chani/AdaptiveGammaCorrection
  * @see https://jeanbruenn.info/2018/11/06/adaptive-gamma-correction-for-brightness-distorted-images-with-imagick-and-php/
  */
-class ImageIAGCWD
+class ImageIAGCWD extends ImageAGC
 {
-    /**
-     * @var \Imagick
-     */
-    private $im = null;
-    /**
-     * @var \Imagick
-     */
-    private $h = null;
-    /**
-     * @var \Imagick
-     */
-    private $s = null;
-    /**
-     * @var \Imagick
-     */
-    private $b = null;
-    /**
-     * @var \Imagick
-     */
-    private $t = null;
+
     /**
      * @var float
      */
     private $alpha = 0.5;
-
-    /**
-     * @param float $alpha
-     */
-    public function setAdjustingParameter($alpha = 0.5)
-    {
-        $this->alpha = $alpha;
-    }
 
     /**
      * @return float
@@ -63,31 +36,9 @@ class ImageIAGCWD
     }
 
     /**
-     * @param \Imagick $im
-     */
-    public function __construct(\Imagick $im)
-    {
-        $im->transformImageColorspace(\Imagick::COLORSPACE_HSB);
-
-        $h = clone $im;
-        $s = clone $im;
-        $b = clone $im;
-
-        $h->separateImageChannel(\Imagick::CHANNEL_RED);
-        $s->separateImageChannel(\Imagick::CHANNEL_GREEN);
-        $b->separateImageChannel(\Imagick::CHANNEL_BLUE);
-
-        $this->im = $im;
-        $this->h = $h;
-        $this->s = $s;
-        $this->b = $b;
-        $this->t = clone $b;
-    }
-
-    /**
      * @return \Imagick
      */
-    private function transform()
+    protected function transform()
     {
         $pdf_l = [];
         $pdf_wl = [];
@@ -108,7 +59,7 @@ class ImageIAGCWD
         $rt = 0.3;
         $t = ($m_l - $t1) / $t1;
 
-        /** @todo most likely I can write this nicer... **/
+        /** @todo most likely I can write this nicer... * */
         if ($t < ($rt * (-1))) {
             $dimmed = true;
             $bright = false;
@@ -188,35 +139,10 @@ class ImageIAGCWD
     }
 
     /**
-     * @return \Imagick
+     * @param float $alpha
      */
-    private function combine()
+    public function setAdjustingParameter($alpha = 0.5)
     {
-        $n = new Imagick();
-        $n->addImage($this->h);
-        $n->addImage($this->s);
-        $n->addImage($this->t);
-        $n->setimagecolorspace(\imagick::COLORSPACE_HSB);
-        $n->mergeimagelayers(\Imagick::LAYERMETHOD_FLATTEN);
-        $n = $n->combineImages(\imagick::CHANNEL_ALL);
-        $n->setimagecolorspace(\imagick::COLORSPACE_HSB);
-
-        $n->transformimagecolorspace(\Imagick::COLORSPACE_SRGB);
-
-        return $n;
-    }
-
-    /**
-     * @param null $filename
-     * @return bool
-     */
-    public function writeImage($filename = null)
-    {
-        return $this->transform()->writeimage($filename);
-    }
-
-    public function __toString()
-    {
-        return $this->transform()->__toString();
+        $this->alpha = $alpha;
     }
 }

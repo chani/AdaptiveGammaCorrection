@@ -2,7 +2,7 @@
 /**
  * Class ImageAGCWD
  *
- * PHP implementation of Adaptive Gamma Correction with Weighting Distribution
+ * PHP implementation of an Adaptive Gamma Correction with Weighting Distribution
  *
  * Reference:
  *   S. Huang, F. Cheng and Y. Chiu, "Efficient Contrast Enhancement Using Adaptive Gamma Correction With
@@ -15,28 +15,8 @@
  * @see https://github.com/chani/AdaptiveGammaCorrection
  * @see https://jeanbruenn.info/2018/11/05/adaptive-gamma-correction-with-weighting-distribution-with-imagick-and-php/
  */
-class ImageAGCWD
+class ImageAGCWD extends ImageAGC
 {
-    /**
-     * @var \Imagick
-     */
-    private $im = null;
-    /**
-     * @var \Imagick
-     */
-    private $h = null;
-    /**
-     * @var \Imagick
-     */
-    private $s = null;
-    /**
-     * @var \Imagick
-     */
-    private $b = null;
-    /**
-     * @var \Imagick
-     */
-    private $t = null;
     /**
      * @var float
      */
@@ -59,31 +39,9 @@ class ImageAGCWD
     }
 
     /**
-     * @param \Imagick $im
-     */
-    public function __construct(\Imagick $im)
-    {
-        $im->transformImageColorspace(\Imagick::COLORSPACE_HSB);
-
-        $h = clone $im;
-        $s = clone $im;
-        $b = clone $im;
-
-        $h->separateImageChannel(\Imagick::CHANNEL_RED);
-        $s->separateImageChannel(\Imagick::CHANNEL_GREEN);
-        $b->separateImageChannel(\Imagick::CHANNEL_BLUE);
-
-        $this->im = $im;
-        $this->h = $h;
-        $this->s = $s;
-        $this->b = $b;
-        $this->t = clone $b;
-    }
-
-    /**
      * @return \Imagick
      */
-    private function transform()
+    protected function transform()
     {
         $pdf_l = [];
         $pdf_wl = [];
@@ -135,38 +93,5 @@ class ImageAGCWD
             $imageIterator->syncIterator();
         }
         return $this->combine();
-    }
-
-    /**
-     * @return \Imagick
-     */
-    private function combine()
-    {
-        $n = new Imagick();
-        $n->addImage($this->h);
-        $n->addImage($this->s);
-        $n->addImage($this->t);
-        $n->setimagecolorspace(\imagick::COLORSPACE_HSB);
-        $n->mergeimagelayers(\Imagick::LAYERMETHOD_FLATTEN);
-        $n = $n->combineImages(\imagick::CHANNEL_ALL);
-        $n->setimagecolorspace(\imagick::COLORSPACE_HSB);
-
-        $n->transformimagecolorspace(\Imagick::COLORSPACE_SRGB);
-
-        return $n;
-    }
-
-    /**
-     * @param null $filename
-     * @return bool
-     */
-    public function writeImage($filename = null)
-    {
-        return $this->transform()->writeimage($filename);
-    }
-
-    public function __toString()
-    {
-        return $this->transform()->__toString();
     }
 }
