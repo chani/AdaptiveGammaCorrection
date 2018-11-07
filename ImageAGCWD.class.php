@@ -60,15 +60,15 @@ class ImageAGCWD extends ImageAGC
 
         $minPDF = min($pdf_l);
         $maxPDF = max($pdf_l);
+        $diffPDF = $maxPDF - $minPDF;
+
         $pdf_wl_sum = 0;
         foreach ($pdf_l as $intensity => $pdf) {
-            $pdf_wl[$intensity] = $maxPDF * pow((($pdf_l[$intensity] - $minPDF) / ($maxPDF - $minPDF)), $this->alpha);
-            $pdf_wl_sum += $pdf_wl[$intensity];
-        }
-        foreach ($pdf_wl as $intensity => $pdfw) {
+            $pdf_wl[$intensity] = $maxPDF * pow((($pdf_l[$intensity] - $minPDF) / $diffPDF), $this->alpha);
             $cdf_wl[$intensity] = array_sum(array_filter($pdf_wl, function ($k) use ($intensity) {
-                    return $k <= $intensity;
-                }, ARRAY_FILTER_USE_KEY)) / $pdf_wl_sum;
+                return $k <= $intensity;
+            }, ARRAY_FILTER_USE_KEY));
+            $pdf_wl_sum += $pdf_wl[$intensity];
         }
 
         $imageIterator = $this->t->getPixelIterator();
@@ -80,7 +80,7 @@ class ImageAGCWD extends ImageAGC
                 $c = $pixel->getcolor();
                 $l = $c['b'];
 
-                $value = $lmax * pow(($l / $lmax), (1 - $cdf_wl[$l]));
+                $value = $lmax * pow(($l / $lmax), (1 - ($cdf_wl[$l] / $pdf_wl_sum)));
 
                 $pixel->setColorValue(\Imagick::COLOR_RED, $value / 255);
                 $pixel->setColorValue(\Imagick::COLOR_BLUE, $value / 255);
