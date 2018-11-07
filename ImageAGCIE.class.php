@@ -17,6 +17,24 @@
  */
 class ImageAGCIE extends ImageAGC
 {
+    private $contrastClassifier = 3;
+
+    /**
+     * @return int
+     */
+    public function getContrastClassifier()
+    {
+        return $this->contrastClassifier;
+    }
+
+    /**
+     * @param int $contrastClassifier
+     */
+    public function setContrastClassifier($contrastClassifier)
+    {
+        $this->contrastClassifier = $contrastClassifier;
+    }
+
     /**
      * @return \Imagick
      */
@@ -26,9 +44,16 @@ class ImageAGCIE extends ImageAGC
         $standardDeviation = $data['standardDeviation'] / $this->b->getQuantum();
         $mean = $data['mean'] / $this->b->getQuantum();
 
-        $r = 3;
         $subClass = ($mean >= 0.5) ? 'b' : 'd';
-        $class = (4 * $standardDeviation <= 1 / $r) ? 'lc' . $subClass : 'hc' . $subClass;
+        $class = (4 * $standardDeviation <= 1 / $this->contrastClassifier) ? 'lc' . $subClass : 'hc' . $subClass;
+
+        if ($class == 'lcb' || $class == 'lcd') {
+            $y = -log($standardDeviation, 2);
+        } else {
+            $y = exp((1 - ($mean + $standardDeviation)) / 2);
+        }
+        $h = ((0.5 - $mean) <= 0) ? 0 : 1;
+        $m = pow($mean, $y);
 
         $imageIterator = $this->t->getPixelIterator();
         foreach ($imageIterator as $pixels) {
@@ -36,19 +61,16 @@ class ImageAGCIE extends ImageAGC
             foreach ($pixels as $pixel) {
                 $color = $pixel->getcolor(true);
                 $l = $color['b'];
+                $in = pow($l, $y);
 
-                if ($class == 'lcb' || $class == 'lcd') {
-                    $y = -log($standardDeviation, 2);
-                } else {
-                    $y = exp((1 - ($mean + $standardDeviation)) / 2);
-                }
-
-                if ($class == 'lcb' || $class == 'hcb') {
-                    $value = pow($l, $y);
-                } else {
-                    $m = pow($mean, $y);
-                    $in = pow($l, $y);
+                if ($class == 'lcb') {
+                    $value = $in;
+                } elseif ($class == 'lcd') {
                     $value = $in / ($in + ((1 - $in) * $m));
+                } else {
+                    $k = $in + ((1 - $in) * $m);
+                    $c = 1 / (1 + ($h * ($k - 1)));
+                    $value = $c * $in;
                 }
 
                 $pixel->setColorValue(\Imagick::COLOR_RED, $value);
