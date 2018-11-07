@@ -1,6 +1,15 @@
 <?php
 /**
  * Class ImageAGC
+ *
+ * Just converts to HSB and separates the channels so that one can work on the V- (or rather B) channel
+ * to transform an image using adaptive gamma correction techniques. This class also holds methods
+ * which are identical in the concrete classes.
+ *
+ * @author Jean-Michel Bruenn <himself@jeanbruenn.info>
+ * @copyright 2018 <himself@jeanbruenn.info>
+ * @license https://opensource.org/licenses/MIT The MIT License
+ * @see https://github.com/chani/AdaptiveGammaCorrection
  */
 abstract class ImageAGC
 {
