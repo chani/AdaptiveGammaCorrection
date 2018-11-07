@@ -56,9 +56,12 @@ abstract class ImageAGC
         return $this->transform()->writeimage($filename);
     }
 
-    public function __toString()
+    /**
+     * @return Imagick
+     */
+    protected function transform()
     {
-        return $this->transform()->__toString();
+        return $this->combine();
     }
 
     /**
@@ -78,5 +81,10 @@ abstract class ImageAGC
         $n->transformimagecolorspace(\Imagick::COLORSPACE_SRGB);
 
         return $n;
+    }
+
+    public function __toString()
+    {
+        return $this->transform()->__toString();
     }
 }
