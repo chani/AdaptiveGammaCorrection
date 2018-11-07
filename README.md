@@ -11,7 +11,7 @@ These are just some implementations of proposed methods in papers I've read whic
 ```
 $testImage = new Imagick('test.png');
 
-$agcie = new ImageAGCWD($testImage);
+$agcie = new ImageAGCIE($testImage);
 $agcie->writeImage('agcie.png');
 
 $agcwd = new ImageAGCWD($testImage);
