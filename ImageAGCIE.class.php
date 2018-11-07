@@ -23,17 +23,13 @@ class ImageAGCIE extends ImageAGC
     protected function transform()
     {
         $data = $this->b->getImageChannelMean(\Imagick::CHANNEL_ALL);
-        if (is_nan($data['standardDeviation'])) {
-            echo "Couldn't determine standard Deviation, won't process...";
-            return;
-        }
         $standardDeviation = $data['standardDeviation'] / $this->b->getQuantum();
         $mean = $data['mean'] / $this->b->getQuantum();
 
         $r = 3;
         $subClass = ($mean >= 0.5) ? 'b' : 'd';
         $class = (4 * $standardDeviation <= 1 / $r) ? 'lc' . $subClass : 'hc' . $subClass;
-        echo $class . "\n";
+
         $imageIterator = $this->t->getPixelIterator();
         foreach ($imageIterator as $pixels) {
             /** @var $pixel \ImagickPixel * */

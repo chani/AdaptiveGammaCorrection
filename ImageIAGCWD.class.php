@@ -121,14 +121,10 @@ class ImageIAGCWD extends ImageAGC
                 } else {
                     $value = $lmax * pow(($l / $lmax), (1 - $cdf_wl[$l]));
                 }
-                /**
-                 * I'm not sure if 255 or 256. Also I'm not sure why 25[5|6] works even for 16bit
-                 * images. I believe this should be 65535 for 16bit images?
-                 * @todo fix me
-                 */
-                $pixel->setColorValue(\Imagick::COLOR_RED, $value / 256);
-                $pixel->setColorValue(\Imagick::COLOR_BLUE, $value / 256);
-                $pixel->setColorValue(\Imagick::COLOR_GREEN, $value / 256);
+
+                $pixel->setColorValue(\Imagick::COLOR_RED, $value / 255);
+                $pixel->setColorValue(\Imagick::COLOR_BLUE, $value / 255);
+                $pixel->setColorValue(\Imagick::COLOR_GREEN, $value / 255);
             }
             $imageIterator->syncIterator();
         }
