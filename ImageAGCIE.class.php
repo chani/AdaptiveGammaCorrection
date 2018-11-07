@@ -17,6 +17,9 @@
  */
 class ImageAGCIE extends ImageAGC
 {
+    /**
+     * @var int
+     */
     private $contrastClassifier = 3;
 
     /**
