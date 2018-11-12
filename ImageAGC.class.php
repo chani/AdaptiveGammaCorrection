@@ -43,6 +43,14 @@ abstract class ImageAGC
      */
     public function __construct(\Imagick $im)
     {
+        $this->im = $im;
+    }
+
+    /**
+     * @param Imagick $im
+     */
+    protected function buildHsvWorkingSpace(\Imagick $im)
+    {
         $colorspace = $im->getImageColorspace();
         if ($colorspace == \Imagick::COLORSPACE_UNDEFINED) {
             $colorspace = \Imagick::COLORSPACE_SRGB;

@@ -43,6 +43,9 @@ class ImageAGCWD extends ImageAGC
      */
     protected function transform()
     {
+        // setup HSV working space
+        $this->buildHsvWorkingSpace($this->im);
+        
         $pdf_l = [];
         $pdf_wl = [];
         $cdf_wl = [];
