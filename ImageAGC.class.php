@@ -61,7 +61,7 @@ abstract class ImageAGC
         }
         $this->colorspace = $colorspace;
 
-        if ($colorspace != \Imagick::COLORSPACE_GRAY && $colorspace != \Imagick::COLORSPACE_HSB) {
+        if ($colorspace != \Imagick::COLORSPACE_GRAY) {
             $im->transformImageColorspace(\Imagick::COLORSPACE_HSB);
 
             $h = clone $im;

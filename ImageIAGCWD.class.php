@@ -111,10 +111,10 @@ class ImageIAGCWD extends ImageAGC
         $pdf_wl = [];
         $cdf_wl = [];
 
-        $mn = $this->b->getimagewidth() * $this->b->getimageheight();
+        $mn = $this->original->getimagewidth() * $this->original->getimageheight();
 
         $m_l = 0;
-        $imageIterator = $this->b->getPixelIterator();
+        $imageIterator = $this->original->getPixelIterator();
         foreach ($imageIterator as $pixels) {
             /** @var $pixel \ImagickPixel * */
             foreach ($pixels as $pixel) {
@@ -124,28 +124,32 @@ class ImageIAGCWD extends ImageAGC
             $imageIterator->syncIterator();
         }
 
-        $t1 = 112;
+        // i believe 128 works better than their experimental 112
+        $t1 = 128;
         $rt = 0.3;
         $t = ($m_l - $t1) / $t1;
 
         if ($t < ($rt * (-1))) {
             $dimmed = true;
             $bright = false;
+            $this->buildHsvWorkingSpace($this->original);
         } elseif ($t > $rt) {
             $dimmed = false;
             $bright = true;
+            $negated = clone $this->original;
+            $negated->negateimage(false);
+            $this->buildHsvWorkingSpace($negated);
         } else {
-            // return original if we shouldn't use AGCWD, however, this will still do the colorspace conversation.
+            // return original if we shouldn't use AGCWD
             if ($this->useAGCWD === false)
-                return $this->combine();
+                return $this->original;
             $dimmed = false;
             $bright = false;
+            $this->buildHsvWorkingSpace($this->original);
         }
 
         $alpha = $this->adjustingParameter;
         if ($bright == true) {
-            $this->b->negateimage(false, \Imagick::CHANNEL_ALL);
-            $this->t = clone $this->b;
             $alpha = $this->brightAdjustingParameter;
         } elseif ($dimmed == true) {
             $alpha = $this->dimmedAdjustingParameter;
@@ -174,13 +178,14 @@ class ImageIAGCWD extends ImageAGC
             $pdf_wl_sum += $pdf_wl[$intensity];
         }
 
+        end($pdf_l);
+        $lmax = key($pdf_l);
+
         $r = 0.5;
         $imageIterator = $this->t->getPixelIterator();
         foreach ($imageIterator as $pixels) {
             /** @var $pixel \ImagickPixel * */
             foreach ($pixels as $pixel) {
-                end($pdf_l);
-                $lmax = key($pdf_l);
                 $c = $pixel->getcolor();
                 $l = $c['b'];
 
@@ -197,8 +202,11 @@ class ImageIAGCWD extends ImageAGC
             }
             $imageIterator->syncIterator();
         }
+
         if ($bright == true) {
-            $this->t->negateimage(false, \Imagick::CHANNEL_ALL);
+            $res = $this->combine();
+            $res->negateimage(false);
+            return $res;
         }
         return $this->combine();
     }
