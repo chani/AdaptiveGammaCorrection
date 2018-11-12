@@ -16,6 +16,10 @@ abstract class ImageAGC
     /**
      * @var \Imagick
      */
+    protected $original = null;
+    /**
+     * @var \Imagick
+     */
     protected $im = null;
     /**
      * @var \Imagick
@@ -43,7 +47,7 @@ abstract class ImageAGC
      */
     public function __construct(\Imagick $im)
     {
-        $this->im = $im;
+        $this->original = $im;
     }
 
     /**

@@ -44,7 +44,7 @@ class ImageAGCIE extends ImageAGC
     protected function transform()
     {
         // setup HSV working space
-        $this->buildHsvWorkingSpace($this->im);
+        $this->buildHsvWorkingSpace($this->original);
 
         $data = $this->b->getImageChannelMean(\Imagick::CHANNEL_ALL);
         $standardDeviation = $data['standardDeviation'] / $this->b->getQuantum();
