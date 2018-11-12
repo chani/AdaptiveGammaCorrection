@@ -71,12 +71,13 @@ class ImageAGCWD extends ImageAGC
             $pdf_wl_sum += $pdf_wl[$intensity];
         }
 
+        end($pdf_l);
+        $lmax = key($pdf_l);
+
         $imageIterator = $this->t->getPixelIterator();
         foreach ($imageIterator as $pixels) {
             /** @var $pixel \ImagickPixel * */
             foreach ($pixels as $pixel) {
-                end($pdf_l);
-                $lmax = key($pdf_l);
                 $c = $pixel->getcolor();
                 $l = $c['b'];
 
